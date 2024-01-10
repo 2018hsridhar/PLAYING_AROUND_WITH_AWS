@@ -1,0 +1,20 @@
+/*
+Fiddling around with Route 53 DNS Health Checks
+Health checks of apps key to continuous monitoring
+
+How to fiddle the health checks
+(A) Bring up 3 different instances with 3 different Endpoint Health checks.
+- make sure instance are across different regions to assess network traffic patterns.
+- for one instance, set securityGroup to NOT accept HTTP or HTTP -> only SSH
+- for the other two instances, permit HTTP-HTTPS-SSH traffic.
+
+We should observe an unhealthy health check for the 3rd API endpoint, but not for the first two API endpoints
+
+(B) Bring up a `calculated` health check atop the 3 health checks and AND them all
+Parent Health Check -> Child Health Check
+
+(C) Bring up an alarm-based health check
+
+HW : 
+1. Observe the 
+*/
