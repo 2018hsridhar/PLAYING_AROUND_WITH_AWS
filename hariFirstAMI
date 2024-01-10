@@ -1,0 +1,8 @@
+/*
+Creating an example AMI - Amazon Machine Image
+The AMI will be region bound and used to launch specific instance types.
+Note configurations for the AMI
+
+*/
+descript="First Amazon Machine Image from Hari Sridhar"
+username="hari-user" // needed for instance launch
