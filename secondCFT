@@ -1,0 +1,8 @@
+/*
+A barebones CFT - CloudFormationTemplate - for an easy largeScale userFormSubmission Application
+Deploys the following cloud resources : 
+(A) A single EC2 Instance
+(B) A Single Amazon RDS Aurora Database
+
+Within it's own VPC containing pulblic subnets and private subnets      
+*/
