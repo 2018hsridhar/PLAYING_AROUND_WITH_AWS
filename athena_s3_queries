@@ -1,1 +1,7 @@
+/*
+Authoring Athena to analyze example data - such as Access Logs - stored in Amazon S3
+Avoid transformers and server deployment to query S3 data
+
+
+*/
 
