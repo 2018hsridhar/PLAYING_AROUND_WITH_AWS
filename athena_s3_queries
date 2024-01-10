@@ -2,6 +2,10 @@
 Authoring Athena to analyze example data - such as Access Logs - stored in Amazon S3
 Avoid transformers and server deployment to query S3 data
 
+https://repost.aws/knowledge-center/analyze-logs-athena
+
+Standard SQL Queries for S3 data
+Fast ad-hoc query capabilities
 
 */
 
