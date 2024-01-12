@@ -7,3 +7,10 @@ Figure out good target stores to load KDF data to
 - databases : Redshift
 
 Figure out multiple sources ( not just KDS ) 
+Buffer for accumulations before target delivery in KDF
+Set up buffer intervals ( 1 min - 15 minutes for buffer flush to destinations such as S3 ) 
+
+Enable compression before storage via KDS ( cost savings ) 
+Any IAM roles : KDF <--> S3 target buckets
+
+Need new data to KDS to see in KDF
