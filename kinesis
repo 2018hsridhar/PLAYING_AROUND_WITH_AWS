@@ -1,3 +1,4 @@
 Be able to produce and consume kinesis data streams
 Keep stream open -> needed for KDF as well
 
+Base64 encoding/decoding : raw <--> textual data = https://www.base64decode.org/
