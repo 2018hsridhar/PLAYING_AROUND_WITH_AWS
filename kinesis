@@ -2,3 +2,8 @@ Be able to produce and consume kinesis data streams
 Keep stream open -> needed for KDF as well
 
 Base64 encoding/decoding : raw <--> textual data = https://www.base64decode.org/
+
+Figure out good target stores to load KDF data to 
+- databases : Redshift
+
+Figure out multiple sources ( not just KDS ) 
