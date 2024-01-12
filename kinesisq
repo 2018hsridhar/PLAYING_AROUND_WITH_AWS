@@ -1,0 +1,3 @@
+Be able to produce and consume kinesis data streams
+Keep stream open -> needed for KDF as well
+
