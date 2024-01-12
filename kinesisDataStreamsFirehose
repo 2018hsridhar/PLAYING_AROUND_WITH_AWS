@@ -14,3 +14,6 @@ Enable compression before storage via KDS ( cost savings )
 Any IAM roles : KDF <--> S3 target buckets
 
 Need new data to KDS to see in KDF
+How to incorporate AWS lambda for KDF transformations and processing of data records wish buffer flush interval to Redshift-S3-other destinations?
+
+
