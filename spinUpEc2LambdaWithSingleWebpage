@@ -1,0 +1,13 @@
+/*
+Goals of ths side project
+(A) Spin up two EC2 instances in 2 different regions
+(B) Place a static webpage on the EC2 instances
+(C) Be able to view the EC2 instances
+(D) Do this via a CFT -> CloudFormationTemplate -> versus via the AWS console
+(E) Set up cross region DNS resolution with 50%-50% load balancing
+(F) Scope down webpage : Keep it a simple display
+*/
+
+/*
+The single HTML webpage
+*/
