@@ -1,0 +1,22 @@
+Create servless lambdas to respond to events from multiple sources
+(A) Streaming analytics
+(B) Mobile/IoT Backend
+(C) S3 Buckets ( doing data processing )
+(D)
+(E)
+
+- print out on each event received
+- invocations of lambda increasing ( #-concurrent execs )
+- 1M invocatinos ( get charges )
+
+
+
+
+
+HW Assignment #1 : 
+Set up a stream to ingest events ( from a producer )
+Set up a lambda to consume the stream
+Set up lambda to be multiple source capability ( not just one )
+
+
+
