@@ -1,0 +1,19 @@
+# Can we even use SAM Acceleration to deploy resources to AWS?
+# Goals :
+# (A) Low latency (onPremises, cloud ) deployment 
+# (B) 
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: A starter AWS Lambda function.
+# No parameters ( simple SAM template )
+Resources:
+  helloworldpython:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: app.lambda_handler
+      # To latest runtime
+      Runtime: python3.9
+      CodeUri: src/
+      Description: A starter AWS Lambda function.
+      MemorySize: 128
+      Timeout: 3
