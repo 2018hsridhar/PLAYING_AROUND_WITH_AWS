@@ -1,0 +1,161 @@
+# Commit log
+# Auto install, configure, and start applications on EC2 Instances
+# Apps are minimal applications ( LAMP stack or other minimal stacks )?
+# Linux Running EC2 instances
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/CHAP_TemplateQuickRef.html ( resource to consult )
+# TODO : Issue calls to describe the stack and stack events.
+# 
+# 
+# 
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS CloudFormation basic template to create three single EC2
+  instances across three different availability zones. Leverage CFT bootstrap
+  scripts to install artifacts : packages and files. Minimize billing for AWS
+  resources created from template. Deployment is single region ( US-East-1 )
+  Ensure to use correct AMI ID for stack''s region and EC2 Instance Type.'
+Parameters:
+  UserName: 
+    Type: String
+    NoEcho: True
+    Description: "Assume vanilla user if no command-line username spec provisioned"
+    Default: nonadmin
+    MinLength: "1"
+    MaxLength: "16"
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+  # EC2 Keypair ( SSH Access )
+  Password:
+    Type: String
+    NoEcho: True
+    Description: "Assume passwordless entry"
+    Default: none
+  KeyName:
+    Type: String
+    Description: "Name of key for ssh access"
+    Default: toBeDone
+  # WebServer EC2 instance type
+  InstanceType: 
+    Type: String
+    Description : 'EC2 Instance Type'
+    Default: t2.micro
+  ImageId: 
+    Type: String
+    Description : 'EC2 AMI'
+    Default: ami-0ff8a91507f77f867
+  # IPv4 CIDR Blocks : For VPC and Subnets
+  MyVPCCIDRRange:
+    Type: String
+    Default: 10.0.0.0/24
+  MySubnetACIDRRange:
+    Type: String
+    Default: 10.0.0.0/26
+  MySubnetBIDRRange:
+    Type: String
+    Default: 10.0.0.64/26
+  MySubnetCIDRRange:
+    Type: String
+    Default: 10.0.0.128/26
+Resources:
+  VPCBasedLaunch:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock:
+        Ref: MyVPCCIDRRange
+      InstanceTenancy: default
+  SubnetZoneA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone : "us-east-1a"
+      CidrBlock:
+        Ref: MySubnetACIDRRange
+      VpcId: !Ref VPCBasedLaunch
+  SubnetZoneB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone : "us-east-1b"
+      CidrBlock:
+        Ref: MySubnetBIDRRange
+      VpcId: !Ref VPCBasedLaunch
+  SubnetZoneC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone : "us-east-1c"
+      CidrBlock:
+        Ref: MySubnetCIDRRange
+      VpcId: !Ref VPCBasedLaunch
+  InstanceOne:
+    Type: AWS::EC2::Instance
+    # Specify properties of your resources ( just these 3 needed )
+    Properties:
+      AvailabilityZone: us-east-1a
+      # AMI ID
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      Tags:
+        -
+          Key: "Instance Size"
+          Value: "10"
+        -
+          Key: "Instance order"
+          Value: "1"
+      # KeyName: default
+      SubnetId:
+        Ref: SubnetZoneA
+  InstanceTwo:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: us-east-1b
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      # KeyName: default
+      Tags:
+        -
+          Key: "Instance Size"
+          Value: "50"
+        -
+          Key: "Instance order"
+          Value: "2"
+      SubnetId:
+        Ref: SubnetZoneB
+  InstanceThree:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: us-east-1c
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      # KeyName: default
+      Tags:
+        -
+          Key: "Instance Size"
+          Value: "100"
+        -
+          Key: "Instance order"
+          Value: "3"
+      SubnetId:
+        Ref: SubnetZoneC
+  # Single listener and health checks
+  # Internet-Facing Load Balancer
+  MyCrossAZElasticLoadBalancer:
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    Properties:
+      AvailabilityZones:
+      - "us-east-1a"
+      Instances:
+      - Ref: InstanceOne
+      - Ref: InstanceTwo
+      - Ref: InstanceThree
+      Listeners:
+      - LoadBalancerPort: '80'
+        InstancePort: '80'
+        Protocol: HTTP
+      HealthCheck:
+        Target: HTTP:80/
+        HealthyThreshold: '3'
+        UnhealthyThreshold: '5'
+        Interval: '30'
+        Timeout: '5'
+# Future cross-stack referencing
+Outputs:
+    FileAuthor:
+        Value: "Hari"
+    InstanceNumber:
+        Value: 3
