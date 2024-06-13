@@ -4,7 +4,7 @@
 # Linux Running EC2 instances
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/CHAP_TemplateQuickRef.html ( resource to consult )
 # TODO : Issue calls to describe the stack and stack events.
-# 
+# Set up an application load balancer across three EC2 instances in three different AZs with three different subnets and an encapsulating VPC.
 # 
 # 
 AWSTemplateFormatVersion: '2010-09-09'
@@ -13,6 +13,21 @@ Description: 'AWS CloudFormation basic template to create three single EC2
   scripts to install artifacts : packages and files. Minimize billing for AWS
   resources created from template. Deployment is single region ( US-East-1 )
   Ensure to use correct AMI ID for stack''s region and EC2 Instance Type.'
+Mappings:
+  AWSRegionArch2AMI:
+    us-east-1:
+      HVM64: ami-6869aa05
+    us-east-2:
+      HVM64: ami-7172b611
+    us-west-1:
+      HVM64: ami-31490d51
+    eu-west-1:
+      HVM64: ami-f9dd458a
+  EnvironmentToInstanceType:
+    development:
+      instanceType: t2.micro
+    production:
+      instanceType: t2.micro
 Parameters:
   UserName: 
     Type: String
@@ -88,7 +103,7 @@ Resources:
     Properties:
       AvailabilityZone: us-east-1a
       # AMI ID
-      ImageId: !Ref ImageId
+      ImageId: !FindInMap [AWSRegionArch2AMI, !Ref 'AWS::Region', HVM64]
       InstanceType: !Ref InstanceType
       Tags:
         -
@@ -104,7 +119,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       AvailabilityZone: us-east-1b
-      ImageId: !Ref ImageId
+      ImageId: !FindInMap [AWSRegionArch2AMI, !Ref 'AWS::Region', HVM64]
       InstanceType: !Ref InstanceType
       # KeyName: default
       Tags:
@@ -120,7 +135,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       AvailabilityZone: us-east-1c
-      ImageId: !Ref ImageId
+      ImageId: !FindInMap [AWSRegionArch2AMI, !Ref 'AWS::Region', HVM64]
       InstanceType: !Ref InstanceType
       # KeyName: default
       Tags:
@@ -139,6 +154,8 @@ Resources:
     Properties:
       AvailabilityZones:
       - "us-east-1a"
+      - "us-east-1b"
+      - "us-east-1c"
       Instances:
       - Ref: InstanceOne
       - Ref: InstanceTwo
@@ -153,6 +170,8 @@ Resources:
         UnhealthyThreshold: '5'
         Interval: '30'
         Timeout: '5'
+      Subnets:
+        - SubnetZoneA
 # Future cross-stack referencing
 Outputs:
     FileAuthor:
