@@ -1,4 +1,9 @@
 Goals for Amazon S3  
+
+Started AWS S3 project.
+Basic workflow : within a cloud resource, deploy lambda, S3, and possibly APs ( Access Points ).
+
+
 1. Create a S3 with multiple buckets and objects for each bucket. Objects can be single images.
 2. Some buckets should be made public and private - within buckets, some objects ( images ) should be public and private
 3. Be able to make three buckets across 3 AWS regions
