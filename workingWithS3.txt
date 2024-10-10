@@ -1,1 +1,10 @@
 Goals for Amazon S3  
+1. Create a S3 with multiple buckets and objects for each bucket. Objects can be single images.
+2. Some buckets should be made public and private - within buckets, some objects ( images ) should be public and private
+3. Be able to make three buckets across 3 AWS regions
+4. Be able to upload data and download data
+5. Be able to make a pre-generated URL for non-AWS users to view private objects ( without changing bucket security configuration s)
+6. Set up CORS : Cross-origin resource sharing
+7. Set up S3 Access Logs and dump into external data storage
+8. Set up a redacted lambda function to read simplified versions of S3 objects ( for images, read specific metadata only ) along with S3 access points.
+
