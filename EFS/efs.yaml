@@ -1,0 +1,216 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: StackSet / CloudFormation template (single region) — launches 3 EC2 instances across 3 AZs with EFS (multi-AZ) and secondary EBS volumes. Uses free-tier eligible instance types (t2.micro / t3.micro).
+
+Parameters:
+  ImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    Description: Amazon Linux 2 AMI (SSM parameter)
+  InstanceTypeA:
+    Type: String
+    Default: t2.micro
+    AllowedValues: [t2.micro, t3.micro]
+  InstanceTypeB:
+    Type: String
+    Default: t3.micro
+    AllowedValues: [t2.micro, t3.micro]
+  InstanceTypeC:
+    Type: String
+    Default: t2.micro
+    AllowedValues: [t2.micro, t3.micro]
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: efs-vpc
+
+  SubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: subnet-a
+
+  SubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: subnet-b
+
+  SubnetC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.3.0/24
+      AvailabilityZone: !Select [2, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: subnet-c
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH and EFS (NFS) between instances and EFS
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 2049
+          ToPort: 2049
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+      Tags:
+        - Key: Name
+          Value: instance-sg
+
+  EFSFileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      Encrypted: true
+      PerformanceMode: generalPurpose
+      FileSystemTags:
+        - Key: Name
+          Value: multi-az-efs
+
+  EFSMountTargetA:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EFSFileSystem
+      SubnetId: !Ref SubnetA
+      SecurityGroups:
+        - !Ref InstanceSecurityGroup
+
+  EFSMountTargetB:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EFSFileSystem
+      SubnetId: !Ref SubnetB
+      SecurityGroups:
+        - !Ref InstanceSecurityGroup
+
+  EFSMountTargetC:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EFSFileSystem
+      SubnetId: !Ref SubnetC
+      SecurityGroups:
+        - !Ref InstanceSecurityGroup
+
+  MyInstanceA:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceTypeA
+      SubnetId: !Ref SubnetA
+      SecurityGroupIds:
+        - !Ref InstanceSecurityGroup
+      Tags:
+        - Key: Name
+          Value: stackset-instance-a
+
+  MyInstanceB:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceTypeB
+      SubnetId: !Ref SubnetB
+      SecurityGroupIds:
+        - !Ref InstanceSecurityGroup
+      Tags:
+        - Key: Name
+          Value: stackset-instance-b
+
+  MyInstanceC:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceTypeC
+      SubnetId: !Ref SubnetC
+      SecurityGroupIds:
+        - !Ref InstanceSecurityGroup
+      Tags:
+        - Key: Name
+          Value: stackset-instance-c
+
+  EbsVolumeA:
+    Type: AWS::EC2::Volume
+    Properties:
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Size: 8
+      VolumeType: gp2
+      Tags:
+        - Key: Name
+          Value: ebs-secondary-a
+
+  EbsVolumeB:
+    Type: AWS::EC2::Volume
+    Properties:
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Size: 8
+      VolumeType: gp2
+      Tags:
+        - Key: Name
+          Value: ebs-secondary-b
+
+  EbsVolumeC:
+    Type: AWS::EC2::Volume
+    Properties:
+      AvailabilityZone: !Select [2, !GetAZs '']
+      Size: 8
+      VolumeType: gp2
+      Tags:
+        - Key: Name
+          Value: ebs-secondary-c
+
+  AttachVolumeA:
+    Type: AWS::EC2::VolumeAttachment
+    Properties:
+      InstanceId: !Ref MyInstanceA
+      VolumeId: !Ref EbsVolumeA
+      Device: /dev/sdf
+
+  AttachVolumeB:
+    Type: AWS::EC2::VolumeAttachment
+    Properties:
+      InstanceId: !Ref MyInstanceB
+      VolumeId: !Ref EbsVolumeB
+      Device: /dev/sdf
+
+  AttachVolumeC:
+    Type: AWS::EC2::VolumeAttachment
+    Properties:
+      InstanceId: !Ref MyInstanceC
+      VolumeId: !Ref EbsVolumeC
+      Device: /dev/sdf
+
+Outputs:
+  InstanceAId:
+    Description: Instance A ID
+    Value: !Ref MyInstanceA
+  InstanceBId:
+    Description: Instance B ID
+    Value: !Ref MyInstanceB
+  InstanceCId:
+    Description: Instance C ID
+    Value: !Ref MyInstanceC
+  EFSFileSystemId:
+    Description: EFS FileSystem Id
+    Value: !Ref EFSFileSystem
+  EfsDns:
+    Description: EFS DNS name (region-specific)
+    Value: !Sub "${EFSFileSystem}.efs.${AWS::Region}.amazonaws.com"

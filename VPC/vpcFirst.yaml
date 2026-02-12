@@ -1,0 +1,129 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create two VPCs in different AZs and peer them (same region).
+# VPCs are regional resources but can spamn multiple AZs
+
+# Parameters allow us to customize the stack at creation time without changing the template code.
+# In this case, we can specify the CIDR blocks for each VPC. If not provided, the defaults will be used.
+# The CIDR blocks must be non-overlapping for the VPC peering to work correctly.
+Parameters:
+  VpcACidr:
+    Type: String
+    Default: 10.10.0.0/16
+  VpcBCidr:
+    Type: String
+    Default: 10.20.0.0/16
+
+Resources:
+  VpcA:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcACidr
+      # Must enable DNS support and hostnames for VPC peering to work properly,
+      # especially if you want to use private DNS names for resources in the peered VPCs.
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: vpc-a
+
+  VpcB:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcBCidr
+      # Must enable DNS support and hostnames for VPC peering to work properly,
+      # especially if you want to use private DNS names for resources in the peered VPCs.
+      Tags:
+        - Key: Name
+          Value: vpc-b
+
+  # Need subnets in each VPC to create route tables and routes for peering. 
+  # Each subnet must be in a different AZ to demonstrate cross-AZ peering.
+  SubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VpcA
+      CidrBlock: 10.10.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: vpc-a-subnet
+
+  SubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VpcB
+      CidrBlock: 10.20.1.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: vpc-b-subnet
+
+  RouteTableA:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VpcA
+      Tags:
+        - Key: Name
+          Value: vpc-a-rt
+
+  RouteTableB:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VpcB
+      Tags:
+        - Key: Name
+          Value: vpc-b-rt
+
+  SubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref SubnetA
+      RouteTableId: !Ref RouteTableA
+
+  SubnetBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref SubnetB
+      RouteTableId: !Ref RouteTableB
+
+  VpcPeering:
+    Type: AWS::EC2::VPCPeeringConnection
+    Properties:
+      VpcId: !Ref VpcA
+      PeerVpcId: !Ref VpcB
+      Tags:
+        - Key: Name
+          Value: vpc-a-to-vpc-b
+
+  RouteAtoB:
+    Type: AWS::EC2::Route
+    DependsOn: VpcPeering
+    Properties:
+      RouteTableId: !Ref RouteTableA
+      DestinationCidrBlock: !Ref VpcBCidr
+      VpcPeeringConnectionId: !Ref VpcPeering
+
+  RouteBtoA:
+    Type: AWS::EC2::Route
+    DependsOn: VpcPeering
+    Properties:
+      RouteTableId: !Ref RouteTableB
+      DestinationCidrBlock: !Ref VpcACidr
+      VpcPeeringConnectionId: !Ref VpcPeering
+
+Outputs:
+  VpcAId:
+    Description: VPC A Id
+    Value: !Ref VpcA
+  VpcBId:
+    Description: VPC B Id
+    Value: !Ref VpcB
+  SubnetAId:
+    Description: Subnet A Id
+    Value: !Ref SubnetA
+  SubnetBId:
+    Description: Subnet B Id
+    Value: !Ref SubnetB
+  VpcPeeringId:
+    Description: VPC Peering Connection Id
+    Value: !Ref VpcPeering

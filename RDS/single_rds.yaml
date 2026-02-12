@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Minimal single-AZ EC2 + RDS (no explicit security groups/IAM). Requires a default VPC in the account/region.
+
+Parameters:
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Existing EC2 KeyPair for SSH
+  ImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+  InstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues: [t2.micro, t3.micro]
+  DBInstanceClass:
+    Type: String
+    Default: db.t3.micro
+    AllowedValues: [db.t2.micro, db.t3.micro]
+  DBName:
+    Type: String
+    Default: mydb
+  DBUser:
+    Type: String
+    Default: admin
+  DBPassword:
+    Type: String
+    NoEcho: true
+
+Resources:
+  MyDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: '20'
+      DBInstanceClass: !Ref DBInstanceClass
+      Engine: mysql
+      EngineVersion: '8.0'
+      MasterUsername: !Ref DBUser
+      MasterUserPassword: !Ref DBPassword
+      DBName: !Ref DBName
+      PubliclyAccessible: true
+      MultiAZ: false
+      DeletionProtection: false
+      Tags:
+        - Key: Name
+          Value: simple-rds
+
+  WebInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          yum update -y
+          yum install -y mysql
+          echo "RDS_ENDPOINT=${MyDB.Endpoint.Address}" > /home/ec2-user/rds-info.txt
+          chown ec2-user:ec2-user /home/ec2-user/rds-info.txt
+
+Outputs:
+  EC2InstanceId:
+    Description: EC2 Instance Id
+    Value: !Ref WebInstance
+  RDSInstanceEndpoint:
+    Description: RDS Endpoint Address
+    Value: !GetAtt MyDB.Endpoint.Address
+  RDSInstancePort:
+    Description: RDS Endpoint Port
+    Value: !GetAtt MyDB.Endpoint.Port
+  DBName:
+    Description: Database name
+    Value: !Ref DBName
