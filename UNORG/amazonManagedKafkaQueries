@@ -1,0 +1,11 @@
+/*
+Working with Managed Apache Flink
+Creating example query capabilities for Amazon Managed Kafka
+Goal : Analyze Streaming Data in Real Time
+
+Stream processing application
+
+Input : read the data from an example "Amazon Kinesis Data Streams"
+Output : To an Intended Destination???
+
+*/

@@ -1,0 +1,15 @@
+// Usage : To spin up a basic HTML webpage on EC2 CloudDeployed Instances
+<!DOCTYPE html>
+<html>
+ 
+<head>
+    <title>
+        First Web Page
+    </title>
+</head>
+ 
+<body>
+    Hello World!
+</body>
+ 
+</html>
