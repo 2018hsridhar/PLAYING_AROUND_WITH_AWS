@@ -1,0 +1,65 @@
+# This CloudFormation template creates three EC2 instances across three different Availability Zones (AZs) in a single region. 
+# It uses free-tier eligible instance types (t2.micro or t3.micro) and the latest Amazon Linux 2 AMI. 
+# The instance types can be customized through parameters when launching the stack.
+AWSTemplateFormatVersion: '2010-09-09'
+Description: StackSet / CloudFormation template (single region) — launches 3 EC2 instances across 3 AZs. Uses free-tier eligible instance types (t2.micro / t3.micro).
+
+Parameters:
+  ImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    Description: Amazon Linux 2 AMI (SSM parameter)
+  InstanceTypeA:
+    Type: String
+    Default: t2.micro
+    AllowedValues: [t2.micro, t3.micro]
+  InstanceTypeB:
+    Type: String
+    Default: t3.micro
+    AllowedValues: [t2.micro, t3.micro]
+  InstanceTypeC:
+    Type: String
+    Default: t2.micro
+    AllowedValues: [t2.micro, t3.micro]
+
+Resources:
+  MyInstanceA:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceTypeA
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: stackset-instance-a
+
+  MyInstanceB:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceTypeB
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: stackset-instance-b
+
+  MyInstanceC:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceTypeC
+      AvailabilityZone: !Select [2, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: stackset-instance-c
+
+Outputs:
+  InstanceAId:
+    Description: Instance A ID
+    Value: !Ref MyInstanceA
+  InstanceBId:
+    Description: Instance B ID
+    Value: !Ref MyInstanceB
+  InstanceCId:
+    Description: Instance C ID
+    Value: !Ref MyInstanceC
